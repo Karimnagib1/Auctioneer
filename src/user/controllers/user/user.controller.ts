@@ -110,8 +110,6 @@ export class UserController {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        state: newUser.state,
-        city: newUser.city,
       };
     } else {
       throw new HttpException('Email already exists', 400);
