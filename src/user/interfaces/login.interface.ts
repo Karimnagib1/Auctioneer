@@ -13,7 +13,6 @@ export abstract class LoginBody {
   })
   password: string;
 }
-
 export class LoginResponse {
   @ApiProperty({
     example: 'string',

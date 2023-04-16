@@ -1,5 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Auction } from './auction.entity';
+import { AuctionToUser } from './auctionToUser.entity';
 @Entity()
 export class User {
   @ApiProperty({
@@ -9,7 +11,7 @@ export class User {
   @PrimaryGeneratedColumn({
     type: 'bigint',
 
-    name: 'user_id',
+    name: 'id',
   })
   id: number;
 
@@ -48,4 +50,25 @@ export class User {
     type: 'varchar',
   })
   password: string;
+
+  @ApiProperty({
+    example: false,
+    description: 'Whether this user is an admin or not.',
+  })
+  @Column({
+    name: 'is_admin',
+    nullable: false,
+    default: false,
+    type: 'boolean',
+  })
+  isAdmin: boolean;
+
+  @OneToMany(() => Auction, (auction) => auction.owner)
+  auctions: Auction[];
+
+  @OneToMany(() => Auction, (auction) => auction.winner)
+  wonAuctions: Auction[];
+
+  @OneToMany(() => AuctionToUser, (auctionToUser) => auctionToUser.userId)
+  auctionsToUser: AuctionToUser[];
 }
