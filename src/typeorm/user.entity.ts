@@ -70,5 +70,5 @@ export class User {
   wonAuctions: Auction[];
 
   @OneToMany(() => AuctionToUser, (auctionToUser) => auctionToUser.userId)
-  auctionsToUser: AuctionToUser[];
+  auctionToUser: AuctionToUser[];
 }

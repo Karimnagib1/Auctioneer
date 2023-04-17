@@ -40,6 +40,6 @@ export class AuctionToUser {
   @ManyToMany(() => Auction, (auction) => auction.bidders)
   auction: Auction;
 
-  @ManyToMany(() => User, (user) => user.auctions)
+  @ManyToMany(() => User, (user) => user.auctionToUser)
   user: User;
 }
