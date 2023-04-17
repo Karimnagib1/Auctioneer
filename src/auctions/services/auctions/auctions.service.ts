@@ -21,21 +21,21 @@ export class AuctionsService {
     return await this.auctionRepository.findBy({ id: id });
   }
 
-  async getAuctionByUserId(id: number) {
+  async getAuctionsByUserId(id: number) {
     return await this.auctionRepository
       .createQueryBuilder('auction')
       .where('ownerId = :id', { id: id })
       .getMany();
   }
 
-  async getAuctionByWinnerId(id: number) {
+  async getAuctionsByWinnerId(id: number) {
     return await this.auctionRepository
       .createQueryBuilder('auction')
       .where('winnerId = :id', { id: id })
       .getMany();
   }
 
-  async getAuctionByBidderId(id: number) {
+  async getAuctionsByBidderId(id: number) {
     return await this.auctionToUserRepository
       .createQueryBuilder('auctionToUser')
       .where('user_id = :id', { id: id })
