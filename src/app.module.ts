@@ -5,7 +5,6 @@ import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuctionsModule } from './auctions/auctions.module';
-import { ItemsModule } from './items/items.module';
 import entities from './typeorm';
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import entities from './typeorm';
       inject: [ConfigService],
     }),
     AuctionsModule,
-    ItemsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
