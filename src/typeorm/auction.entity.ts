@@ -49,6 +49,14 @@ export class Auction {
   })
   description: string;
 
+  @Column()
+  ownerId: number;
+
+  @Column({
+    nullable: true,
+  })
+  winnerId: number;
+
   @ApiProperty({
     description: 'The user who created the auction.',
   })
@@ -58,6 +66,6 @@ export class Auction {
   @ManyToOne(() => User, (user) => user.wonAuctions)
   winner: User;
 
-  @OneToMany(() => AuctionToUser, (auctionToUser) => auctionToUser.auctionId)
+  @OneToMany(() => AuctionToUser, (auctionToUser) => auctionToUser.user)
   bidders: AuctionToUser[];
 }

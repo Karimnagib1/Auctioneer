@@ -24,8 +24,8 @@ import {
 import { User } from '../../../typeorm';
 import { LoginBody, LoginResponse } from '../../interfaces/login.interface';
 
-@ApiTags('user')
-@Controller('user')
+@ApiTags('users')
+@Controller('users')
 export class UserController {
   constructor(
     private readonly userService: UserService,

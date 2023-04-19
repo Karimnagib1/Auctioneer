@@ -1,28 +1,14 @@
-import { Column, Entity, ManyToMany, PrimaryColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from './user.entity';
 import { Auction } from './auction.entity';
 
 @Entity()
 export class AuctionToUser {
-  @ApiProperty({
-    example: 0,
-    description: 'The id of the User',
-  })
-  @PrimaryColumn({
-    type: 'bigint',
-    name: 'auction_id',
-  })
+  @PrimaryColumn()
   auctionId: number;
 
-  @ApiProperty({
-    example: 0,
-    description: 'The id of the User',
-  })
-  @PrimaryColumn({
-    type: 'bigint',
-    name: 'user_id',
-  })
+  @PrimaryColumn()
   userId: number;
 
   @ApiProperty({
@@ -37,9 +23,9 @@ export class AuctionToUser {
   })
   bidAmount: number;
 
-  @ManyToMany(() => Auction, (auction) => auction.bidders)
+  @ManyToOne(() => Auction, (auction) => auction.bidders)
   auction: Auction;
 
-  @ManyToMany(() => User, (user) => user.auctionToUser)
+  @ManyToOne(() => User, (user) => user.auctionToUser)
   user: User;
 }

@@ -6,9 +6,12 @@ import {
   Post,
   UseGuards,
   Request,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuctionsService } from 'src/auctions/services/auctions/auctions.service';
+import { CreateAuctionDto } from 'src/auctions/dto/create-auction.dto';
 
 @Controller('auctions')
 export class AuctionsController {
@@ -38,18 +41,27 @@ export class AuctionsController {
   async getAuctionByBidderId(@Param('id') id: number) {
     return await this.auctionsService.getAuctionsByBidderId(id);
   }
-
+  @UsePipes(new ValidationPipe())
   @UseGuards(AuthGuard('jwt'))
   @Post('/')
   async createAuction(
     @Request() req: any,
-    @Body('itemName') itemName: string,
-    @Body('description') description: string,
+    @Body() auctionData: CreateAuctionDto,
   ) {
     return await this.auctionsService.createAuction(
       req.user.id,
-      itemName,
-      description,
+      auctionData.itemName,
+      auctionData.description,
     );
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/bid')
+  async bidAuction(
+    @Request() req: any,
+    @Body('auctionId') auctionId: number,
+    @Body('bid') bid: number,
+  ) {
+    return await this.auctionsService.bidAuction(auctionId, req.user.id, bid);
   }
 }
