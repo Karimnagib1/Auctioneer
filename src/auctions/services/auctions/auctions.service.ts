@@ -48,12 +48,18 @@ export class AuctionsService {
       .getMany();
   }
 
-  async createAuction(ownerId: number, itemName: string, description: string) {
+  async createAuction(
+    ownerId: number,
+    itemName: string,
+    description: string,
+    image: string,
+  ) {
     const auction = new Auction();
     const user = await this.userRepository.findOne({ where: { id: ownerId } });
     auction.owner = user;
     auction.itemName = itemName;
     auction.description = description;
+    auction.image = image;
     return await this.auctionRepository.save(auction);
   }
 
