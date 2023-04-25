@@ -48,18 +48,28 @@ export class Auction {
     type: 'text',
   })
   description: string;
-
+  @ApiProperty({
+    description: 'The ID of the user who created the auction.',
+  })
   @Column()
   ownerId: number;
 
+  @ApiProperty({
+    description: 'The ID of the user who won the auction.',
+  })
   @Column({
     nullable: true,
   })
   winnerId: number;
-
   @ApiProperty({
-    description: 'The user who created the auction.',
+    description: "The auction's item image.",
   })
+  @Column({
+    nullable: false,
+    type: 'varchar',
+  })
+  image: string;
+
   @ManyToOne(() => User, (user) => user.auctions)
   owner: User;
 
