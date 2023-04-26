@@ -51,6 +51,7 @@ export class AuctionsController {
   async getAuctionByBidderId(@Param('id') id: number) {
     return await this.auctionsService.getAuctionsByBidderId(id);
   }
+
   @UsePipes(new ValidationPipe())
   @UseGuards(AuthGuard('jwt'))
   @Post('/')

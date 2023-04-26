@@ -60,7 +60,9 @@ export class AuctionsService {
     auction.itemName = itemName;
     auction.description = description;
     auction.image = image;
-    return await this.auctionRepository.save(auction);
+    const response = await this.auctionRepository.save(auction);
+    delete response.owner.password;
+    return response;
   }
 
   async bidAuction(auctionId: number, userId: number, bidAmount: number) {
