@@ -70,6 +70,27 @@ export class Auction {
   })
   image: string;
 
+  @ApiProperty({
+    description: 'The auction status',
+    default: 'pending',
+    enum: ['pending', 'open', 'closed'],
+  })
+  @Column({
+    nullable: false,
+    default: 'pending',
+    type: 'varchar',
+  })
+  status: string;
+
+  @ApiProperty({
+    description: 'The auction start date and time.',
+  })
+  @Column({
+    nullable: false,
+    type: 'timestamp',
+  })
+  startDate: Date;
+
   @ManyToOne(() => User, (user) => user.auctions)
   owner: User;
 
