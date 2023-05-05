@@ -48,8 +48,13 @@ export class AuctionsController {
   }
 
   @Get('/bidder/:id')
-  async getAuctionByBidderId(@Param('id') id: number) {
+  async getAuctionsByBidderId(@Param('id') id: number) {
     return await this.auctionsService.getAuctionsByBidderId(id);
+  }
+
+  @Get('/bids/:auctionId')
+  async getBidsByAuctionId(@Param('auctionId') auctionId: number) {
+    return await this.auctionsService.getBidsByAuctionId(auctionId);
   }
 
   @UsePipes(new ValidationPipe())

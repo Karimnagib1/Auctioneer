@@ -80,6 +80,17 @@ export class AuctionsService {
     auctionToUser.auction = auction;
     auctionToUser.user = user;
     auctionToUser.bidAmount = bidAmount;
-    return await this.auctionToUserRepository.save(auctionToUser);
+    await this.auctionToUserRepository.save(auctionToUser);
+    return await this.getBidsByAuctionId(auctionId);
+  }
+
+  async getBidsByAuctionId(auctionId: number) {
+    return await this.auctionToUserRepository
+      .createQueryBuilder('auctionToUser')
+      .innerJoin('auctionToUser.user', 'user')
+      .addSelect(['user.name', 'user.id'])
+      .where('auctionToUser.auctionId = :id', { id: auctionId })
+      .orderBy('auctionToUser.bidAmount', 'DESC')
+      .getMany();
   }
 }
