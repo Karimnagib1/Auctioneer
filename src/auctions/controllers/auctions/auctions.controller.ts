@@ -91,6 +91,11 @@ export class AuctionsController {
       auctionData.itemName,
       auctionData.description,
       image.filename,
+      auctionData.year,
+      auctionData.month,
+      auctionData.day,
+      auctionData.hour,
+      auctionData.minute,
     );
   }
 

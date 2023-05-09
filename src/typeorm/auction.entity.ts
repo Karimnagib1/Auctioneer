@@ -1,10 +1,8 @@
 import {
   Column,
   Entity,
-  ManyToMany,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
@@ -73,7 +71,7 @@ export class Auction {
   @ApiProperty({
     description: 'The auction status',
     default: 'pending',
-    enum: ['pending', 'open', 'closed'],
+    enum: ['pending', 'open', 'closed', 'cancelled'],
   })
   @Column({
     nullable: false,
@@ -87,7 +85,7 @@ export class Auction {
   })
   @Column({
     nullable: false,
-    type: 'timestamp',
+    type: 'timestamptz',
   })
   startDate: Date;
 
