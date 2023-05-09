@@ -5,10 +5,13 @@ import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuctionsModule } from './auctions/auctions.module';
+import { ScheduleModule } from '@nestjs/schedule';
+
 import entities from './typeorm';
 @Module({
   imports: [
     UserModule,
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
