@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuctionsModule } from './auctions/auctions.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MyGateway } from './my-gateway/my-gateway.gateway';
 
 import entities from './typeorm';
 @Module({
@@ -29,6 +30,6 @@ import entities from './typeorm';
     AuctionsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, MyGateway],
 })
 export class AppModule {}

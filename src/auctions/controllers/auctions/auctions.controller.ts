@@ -15,6 +15,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { AuctionsService } from 'src/auctions/services/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dto/create-auction.dto';
+import { BidDto } from 'src/auctions/dto/bid.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 
@@ -99,13 +100,14 @@ export class AuctionsController {
     );
   }
 
+  @UsePipes(new ValidationPipe())
   @UseGuards(AuthGuard('jwt'))
   @Post('/bid')
-  async bidAuction(
-    @Request() req: any,
-    @Body('auctionId') auctionId: number,
-    @Body('bid') bid: number,
-  ) {
-    return await this.auctionsService.bidAuction(auctionId, req.user.id, bid);
+  async bidAuction(@Request() req: any, @Body() bid: BidDto) {
+    return await this.auctionsService.bidAuction(
+      bid.auctionId,
+      req.user.id,
+      bid.bidAmount,
+    );
   }
 }

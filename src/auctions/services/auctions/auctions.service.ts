@@ -3,7 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Auction, AuctionToUser, User } from 'src/typeorm';
 import { Repository } from 'typeorm';
 import { HttpException } from '@nestjs/common';
+import { io } from 'socket.io-client';
 
+const socket = io('http://localhost:3000');
+socket.on('connect', () => {
+  console.log('client connected');
+});
+socket.on('connect_error', (error: any) => {
+  console.error('Socket connection error:', error);
+});
 @Injectable()
 export class AuctionsService {
   constructor(
@@ -80,7 +88,9 @@ export class AuctionsService {
     delete response.owner.password;
     return response;
   }
-
+  private sendMessageToRoom(roomName: string, message: any): any {
+    return socket.emit('sendMessageToRoom', { roomName, message });
+  }
   async bidAuction(auctionId: number, userId: number, bidAmount: number) {
     const auction = await this.auctionRepository.findOne({
       where: { id: auctionId },
@@ -107,6 +117,11 @@ export class AuctionsService {
     auctionToUser.user = user;
     auctionToUser.bidAmount = bidAmount;
     await this.auctionToUserRepository.save(auctionToUser);
+    this.sendMessageToRoom(auctionId.toString(), {
+      type: 'bid',
+      bidAmount: bidAmount,
+      userId: userId,
+    });
     return await this.getBidsByAuctionId(auctionId);
   }
 
