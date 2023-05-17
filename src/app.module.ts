@@ -28,6 +28,10 @@ import entities from './typeorm';
       inject: [ConfigService],
     }),
     AuctionsModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
   ],
   controllers: [AppController],
   providers: [AppService, MyGateway],
