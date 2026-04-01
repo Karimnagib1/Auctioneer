@@ -3,15 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Auction, AuctionToUser, User } from 'src/typeorm';
 import { Repository } from 'typeorm';
 import { HttpException } from '@nestjs/common';
-import { io } from 'socket.io-client';
-import { ConfigService } from '@nestjs/config';
-// const socket = io("http://localhost:3000");
-// socket.on('connect', () => {
-//   console.log('client connected');
-// });
-// socket.on('connect_error', (error: any) => {
-//   console.error('Socket connection error:', error);
-// });
+import { MyGateway } from 'src/my-gateway/my-gateway.gateway';
+
 @Injectable()
 export class AuctionsService {
   constructor(
@@ -20,9 +13,8 @@ export class AuctionsService {
     @InjectRepository(AuctionToUser)
     private readonly auctionToUserRepository: Repository<AuctionToUser>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    private configService: ConfigService,
+    private readonly gateway: MyGateway,
   ) {}
-  private socket = io(this.configService.get('BACKEND_URL'));
 
   async getAuctions() {
     return await this.auctionRepository.find();
@@ -90,9 +82,7 @@ export class AuctionsService {
     delete response.owner.password;
     return response;
   }
-  private sendMessageToRoom(roomName: string, message: any): any {
-    return this.socket.emit('sendMessageToRoom', { roomName, message });
-  }
+
   async bidAuction(auctionId: number, userId: number, bidAmount: number) {
     const auction = await this.auctionRepository.findOne({
       where: { id: auctionId },
@@ -113,13 +103,26 @@ export class AuctionsService {
       throw new HttpException('You cannot bid on your own auction.', 400);
     }
 
+    const highestBid = await this.auctionToUserRepository
+      .createQueryBuilder('auctionToUser')
+      .select('MAX(auctionToUser.bidAmount)', 'max')
+      .where('auctionToUser.auctionId = :auctionId', { auctionId })
+      .getRawOne();
+
+    if (highestBid?.max !== null && bidAmount <= Number(highestBid.max)) {
+      throw new HttpException(
+        `Bid must be greater than the current highest bid of ${highestBid.max}.`,
+        400,
+      );
+    }
+
     const user = await this.userRepository.findOne({ where: { id: userId } });
     const auctionToUser = new AuctionToUser();
     auctionToUser.auction = auction;
     auctionToUser.user = user;
     auctionToUser.bidAmount = bidAmount;
     await this.auctionToUserRepository.save(auctionToUser);
-    this.sendMessageToRoom(auctionId.toString(), {
+    this.gateway.broadcastToRoom(auctionId.toString(), {
       type: 'bid',
       bidAmount: bidAmount,
       userId: userId,

@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuctionsModule } from './auctions/auctions.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MyGateway } from './my-gateway/my-gateway.gateway';
+import { MyGatewayModule } from './my-gateway/my-gateway.module';
 
 import entities from './typeorm';
 @Module({
@@ -23,17 +23,18 @@ import entities from './typeorm';
         password: configService.get('POSTGRES_PASSWORD') || 'root',
         database: configService.get('POSTGRES_DATABASE') || 'nest',
         entities: entities,
-        synchronize: true,
+        synchronize: process.env.NODE_ENV !== 'production',
       }),
       inject: [ConfigService],
     }),
     AuctionsModule,
+    MyGatewayModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, MyGateway],
+  providers: [AppService],
 })
 export class AppModule {}

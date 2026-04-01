@@ -12,6 +12,7 @@ import {
   UploadedFile,
   Res,
 } from '@nestjs/common';
+import * as path from 'path';
 import { AuthGuard } from '@nestjs/passport';
 import { AuctionsService } from 'src/auctions/services/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dto/create-auction.dto';
@@ -30,7 +31,7 @@ export class AuctionsController {
 
   @Get('/image/:imgName')
   getAuctionImage(@Param('imgName') image, @Res() res) {
-    return res.sendFile(image, { root: './itemImages' });
+    return res.sendFile(path.basename(image), { root: './itemImages' });
   }
 
   @Get('/:id')

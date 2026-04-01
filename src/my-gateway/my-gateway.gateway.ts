@@ -52,4 +52,8 @@ export class MyGateway
     console.log(`message was emmited to ${roomName}`);
     this.server.to(roomName).emit('message', message);
   }
+
+  broadcastToRoom(roomName: string, message: any): void {
+    this.server.to(roomName).emit('message', message);
+  }
 }
