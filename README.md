@@ -1,73 +1,121 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Auctioneer
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A real-time online auction platform built with NestJS, PostgreSQL, and Socket.io.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- User registration and JWT authentication
+- Create and manage auctions with scheduled start and end dates
+- Real-time bidding via WebSocket (Socket.io)
+- Proxy / max bidding — the system auto-bids on your behalf up to your limit
+- Buy Now — instantly close an auction at a fixed price
+- Reserve price — no winner if bidding doesn't meet the minimum
+- Auction extension — end time is automatically extended when a bid comes in near closing
+- Buyer's premium — configurable fee shown as effective price on each bid
+- In-app notifications — get notified when outbid, when you win, or when an auction closes
+- Auction analytics — view count, unique bidders, bid timeline
+- Cancel and relist auctions
+- Multiple image uploads per auction
+- Automatic auction lifecycle management via cron jobs
+- Swagger API documentation
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tech Stack
 
-## Installation
+- **Framework:** NestJS (TypeScript)
+- **Database:** PostgreSQL via TypeORM
+- **Auth:** Passport.js — LocalStrategy + JwtStrategy
+- **WebSocket:** Socket.io
+- **File uploads:** Multer
+- **Scheduling:** @nestjs/schedule (cron jobs)
+- **Docs:** Swagger / OpenAPI
 
-```bash
-$ npm install
-```
+## Getting Started
 
-## Running the app
+### With Docker (recommended)
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Test
+Make sure Docker Desktop is running, then:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up --build
 ```
 
-## Support
+The app will be available at `http://localhost:3000`.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Without Docker
 
-## Stay in touch
+1. Make sure a PostgreSQL instance is running locally.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+2. Install dependencies:
+```bash
+npm install
+```
 
-## License
+3. Create a `.env` file in the project root:
+```
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your-db-password
+POSTGRES_DATABASE=nest
+JWT_SECRET=your-jwt-secret
+```
 
-Nest is [MIT licensed](LICENSE).
+4. Start the development server:
+```bash
+npm run start:dev
+```
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `POSTGRES_HOST` | PostgreSQL host |
+| `POSTGRES_PORT` | PostgreSQL port (default 5432) |
+| `POSTGRES_USER` | PostgreSQL user |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `POSTGRES_DATABASE` | Database name |
+| `JWT_SECRET` | Secret key for signing JWT tokens |
+
+## API Documentation
+
+Swagger UI is available at `http://localhost:3000/api` when the app is running.
+
+## Available Scripts
+
+```bash
+npm run start:dev     # Development with hot reload
+npm run build         # Compile TypeScript
+npm run start:prod    # Run compiled output
+npm run lint          # ESLint with auto-fix
+npm run test          # Unit tests
+npm run test:cov      # Unit tests with coverage report
+npm run test:e2e      # End-to-end tests
+```
+
+## Project Structure
+
+```
+src/
+├── auctions/
+│   ├── controllers/     # REST endpoints
+│   ├── dto/             # Request validation
+│   └── services/
+│       ├── auctions/    # Core auction & bidding logic
+│       └── task/        # Cron job (open/close auctions)
+├── my-gateway/          # Socket.io WebSocket gateway
+├── typeorm/             # TypeORM entities
+└── user/
+    ├── controllers/     # Auth & profile endpoints
+    ├── dto/
+    └── services/
+        ├── auth/        # JWT & local auth strategies
+        └── user/        # User management
+```
+
+## WebSocket Events
+
+Clients connect and join an auction room by emitting `joinRoom` with the auction ID. Bid updates are broadcast to the room:
+
+```json
+{ "type": "bid", "bidAmount": 350, "userId": 2, "effectivePrice": 367.5 }
+```
