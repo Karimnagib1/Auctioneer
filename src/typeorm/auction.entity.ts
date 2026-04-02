@@ -46,6 +46,7 @@ export class Auction {
     type: 'text',
   })
   description: string;
+
   @ApiProperty({
     description: 'The ID of the user who created the auction.',
   })
@@ -59,6 +60,7 @@ export class Auction {
     nullable: true,
   })
   winnerId: number;
+
   @ApiProperty({
     description: "The auction's item image.",
   })
@@ -71,7 +73,7 @@ export class Auction {
   @ApiProperty({
     description: 'The auction status',
     default: 'pending',
-    enum: ['pending', 'open', 'closed', 'cancelled'],
+    enum: ['pending', 'active', 'closed', 'cancelled'],
   })
   @Column({
     nullable: false,
@@ -88,6 +90,69 @@ export class Auction {
     type: 'timestamptz',
   })
   startDate: Date;
+
+  @ApiProperty({
+    description: 'The auction end date and time (optional).',
+  })
+  @Column({
+    nullable: true,
+    type: 'timestamptz',
+    default: null,
+  })
+  endDate: Date;
+
+  @ApiProperty({
+    description: 'The reserve price. If no bid meets this, the auction closes with no winner.',
+  })
+  @Column({
+    nullable: true,
+    type: 'numeric',
+    default: null,
+  })
+  reservePrice: number;
+
+  @ApiProperty({
+    description: 'The buy-now price. Bidding this amount immediately closes the auction.',
+  })
+  @Column({
+    nullable: true,
+    type: 'numeric',
+    default: null,
+  })
+  buyNowPrice: number;
+
+  @ApiProperty({
+    description: 'Minutes before endDate that a bid will extend the auction.',
+    default: 5,
+  })
+  @Column({
+    nullable: false,
+    default: 5,
+    type: 'int',
+  })
+  extensionMinutes: number;
+
+  @ApiProperty({
+    description: "Buyer's premium percentage added on top of bid amount.",
+    default: 0,
+  })
+  @Column({
+    nullable: false,
+    default: 0,
+    type: 'numeric',
+  })
+  buyerPremiumPercent: number;
+
+  @ApiProperty({
+    description: 'Number of times this auction has been viewed.',
+    default: 0,
+  })
+  @Column({
+    nullable: false,
+    default: 0,
+    type: 'int',
+  })
+  viewCount: number;
 
   @ManyToOne(() => User, (user) => user.auctions)
   owner: User;
