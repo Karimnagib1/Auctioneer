@@ -55,8 +55,8 @@ describe('AuctionsService', () => {
         { provide: getRepositoryToken(Auction), useFactory: mockAuctionRepository },
         { provide: getRepositoryToken(AuctionToUser), useFactory: mockAuctionToUserRepository },
         { provide: getRepositoryToken(User), useFactory: mockUserRepository },
-        { provide: getRepositoryToken(ProxyBid), useValue: { findOne: jest.fn(), save: jest.fn(), createQueryBuilder: jest.fn() } },
-        { provide: getRepositoryToken(Notification), useValue: { create: jest.fn(), save: jest.fn() } },
+        { provide: getRepositoryToken(ProxyBid), useValue: { findOne: jest.fn(), create: jest.fn(), save: jest.fn(), createQueryBuilder: jest.fn() } },
+        { provide: getRepositoryToken(Notification), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn() } },
         { provide: getRepositoryToken(AuctionImage), useValue: { create: jest.fn(), save: jest.fn() } },
         { provide: MyGateway, useFactory: mockGateway },
         { provide: ConfigService, useValue: { get: jest.fn() } },
@@ -264,6 +264,182 @@ describe('AuctionsService', () => {
 
       expect(qb.orderBy).toHaveBeenCalledWith('auctionToUser.bidAmount', 'DESC');
       expect(result).toEqual(bids);
+    });
+  });
+
+  describe('getNotificationsForUser', () => {
+    it('should return notifications for a user ordered by createdAt DESC', async () => {
+      const notificationRepo = module.get(getRepositoryToken(Notification));
+      const notifications = [{ id: 1, userId: 5, message: 'outbid' }] as any[];
+      (notificationRepo.find as jest.Mock).mockResolvedValue(notifications);
+
+      const result = await service.getNotificationsForUser(5);
+
+      expect(notificationRepo.find).toHaveBeenCalledWith({
+        where: { userId: 5 },
+        order: { createdAt: 'DESC' },
+      });
+      expect(result).toEqual(notifications);
+    });
+  });
+
+  describe('markNotificationRead', () => {
+    it('should mark the notification as read and return it', async () => {
+      const notificationRepo = module.get(getRepositoryToken(Notification));
+      const notification = { id: 1, userId: 5, isRead: false } as any;
+      (notificationRepo.findOne as jest.Mock).mockResolvedValue(notification);
+      (notificationRepo.save as jest.Mock).mockResolvedValue({ ...notification, isRead: true });
+
+      const result = await service.markNotificationRead(1, 5);
+
+      expect(result.isRead).toBe(true);
+    });
+
+    it('should throw 404 when notification does not exist', async () => {
+      const notificationRepo = module.get(getRepositoryToken(Notification));
+      (notificationRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.markNotificationRead(99, 5)).rejects.toThrow(
+        new HttpException('Notification not found.', 404),
+      );
+    });
+
+    it('should throw 403 when notification belongs to another user', async () => {
+      const notificationRepo = module.get(getRepositoryToken(Notification));
+      (notificationRepo.findOne as jest.Mock).mockResolvedValue({ id: 1, userId: 99 });
+
+      await expect(service.markNotificationRead(1, 5)).rejects.toThrow(
+        new HttpException('Forbidden.', 403),
+      );
+    });
+  });
+
+  describe('setProxyBid', () => {
+    it('should create a new proxy bid when none exists', async () => {
+      const proxyBidRepo = module.get(getRepositoryToken(ProxyBid));
+      (proxyBidRepo.findOne as jest.Mock).mockResolvedValue(null);
+      (proxyBidRepo.create as jest.Mock).mockReturnValue({ auctionId: 1, userId: 2, maxAmount: 500 });
+      (proxyBidRepo.save as jest.Mock).mockResolvedValue({ auctionId: 1, userId: 2, maxAmount: 500 });
+
+      const result = await service.setProxyBid(1, 2, 500);
+
+      expect(proxyBidRepo.create).toHaveBeenCalledWith({ auctionId: 1, userId: 2, maxAmount: 500 });
+      expect(proxyBidRepo.save).toHaveBeenCalled();
+      expect(result.maxAmount).toBe(500);
+    });
+
+    it('should update maxAmount when proxy bid already exists', async () => {
+      const proxyBidRepo = module.get(getRepositoryToken(ProxyBid));
+      const existing = { auctionId: 1, userId: 2, maxAmount: 300 } as any;
+      (proxyBidRepo.findOne as jest.Mock).mockResolvedValue(existing);
+      (proxyBidRepo.save as jest.Mock).mockResolvedValue({ ...existing, maxAmount: 600 });
+
+      const result = await service.setProxyBid(1, 2, 600);
+
+      expect(proxyBidRepo.create).not.toHaveBeenCalled();
+      expect(result.maxAmount).toBe(600);
+    });
+  });
+
+  describe('getAuctionAnalytics', () => {
+    it('should throw 404 when auction does not exist', async () => {
+      auctionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getAuctionAnalytics(99)).rejects.toThrow(
+        new HttpException('Auction not found.', 404),
+      );
+    });
+
+    it('should return analytics for an auction', async () => {
+      auctionRepo.findOne.mockResolvedValue({ id: 1, viewCount: 10 } as any);
+      const bids = [
+        { bidAmount: 500, userId: 2, createdAt: new Date(), isProxyBid: false },
+        { bidAmount: 300, userId: 3, createdAt: new Date(), isProxyBid: false },
+      ] as any[];
+      const qb = mockSelectQueryBuilder(bids);
+      auctionToUserRepo.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.getAuctionAnalytics(1);
+
+      expect(result.viewCount).toBe(10);
+      expect(result.totalBids).toBe(2);
+      expect(result.uniqueBidderCount).toBe(2);
+      expect(result.highestBid).toBe(500);
+      expect(result.lowestBid).toBe(300);
+      expect(result.bidTimeline).toHaveLength(2);
+    });
+  });
+
+  describe('cancelAuction', () => {
+    it('should cancel an active auction owned by the user', async () => {
+      const auction = { id: 1, ownerId: 5, status: 'active' } as any;
+      auctionRepo.findOne.mockResolvedValue(auction);
+      auctionRepo.save.mockResolvedValue({ ...auction, status: 'cancelled' });
+
+      const result = await service.cancelAuction(1, 5);
+
+      expect(result.status).toBe('cancelled');
+    });
+
+    it('should throw 404 when auction does not exist', async () => {
+      auctionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.cancelAuction(99, 5)).rejects.toThrow(
+        new HttpException('Auction not found.', 404),
+      );
+    });
+
+    it('should throw 403 when user is not the owner', async () => {
+      auctionRepo.findOne.mockResolvedValue({ id: 1, ownerId: 99, status: 'active' } as any);
+
+      await expect(service.cancelAuction(1, 5)).rejects.toThrow(
+        new HttpException('You are not the owner of this auction.', 403),
+      );
+    });
+
+    it('should throw 400 when auction is already closed or cancelled', async () => {
+      auctionRepo.findOne.mockResolvedValue({ id: 1, ownerId: 5, status: 'closed' } as any);
+
+      await expect(service.cancelAuction(1, 5)).rejects.toThrow(
+        new HttpException('Cannot cancel a closed or already cancelled auction.', 400),
+      );
+    });
+  });
+
+  describe('relistAuction', () => {
+    it('should create a new auction from a closed one', async () => {
+      const original = { id: 1, ownerId: 5, status: 'closed', itemName: 'Watch', description: 'desc', image: 'img.jpg' } as any;
+      auctionRepo.findOne.mockResolvedValue(original);
+      auctionRepo.save.mockResolvedValue({ id: 2, itemName: 'Watch', status: 'pending' } as any);
+
+      const result = await service.relistAuction(1, 5, '2027', '1', '1', '10', '0');
+
+      expect(auctionRepo.save).toHaveBeenCalled();
+      expect(result.status).toBe('pending');
+    });
+
+    it('should throw 404 when original auction does not exist', async () => {
+      auctionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.relistAuction(99, 5, '2027', '1', '1', '10', '0')).rejects.toThrow(
+        new HttpException('Auction not found.', 404),
+      );
+    });
+
+    it('should throw 403 when user is not the owner', async () => {
+      auctionRepo.findOne.mockResolvedValue({ id: 1, ownerId: 99, status: 'closed' } as any);
+
+      await expect(service.relistAuction(1, 5, '2027', '1', '1', '10', '0')).rejects.toThrow(
+        new HttpException('You are not the owner of this auction.', 403),
+      );
+    });
+
+    it('should throw 400 when auction is still active or pending', async () => {
+      auctionRepo.findOne.mockResolvedValue({ id: 1, ownerId: 5, status: 'active' } as any);
+
+      await expect(service.relistAuction(1, 5, '2027', '1', '1', '10', '0')).rejects.toThrow(
+        new HttpException('Can only relist closed or cancelled auctions.', 400),
+      );
     });
   });
 });

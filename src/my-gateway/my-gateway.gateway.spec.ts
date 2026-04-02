@@ -16,6 +16,26 @@ describe('MyGateway', () => {
     expect(gateway).toBeDefined();
   });
 
+  describe('afterInit', () => {
+    it('should not throw when called with a server instance', () => {
+      expect(() => gateway.afterInit({} as any)).not.toThrow();
+    });
+  });
+
+  describe('handleConnection', () => {
+    it('should not throw when a client connects', async () => {
+      const mockClient = { id: 'client-1' } as any;
+      await expect(gateway.handleConnection(mockClient)).resolves.not.toThrow();
+    });
+  });
+
+  describe('handleDisconnect', () => {
+    it('should not throw when a client disconnects', () => {
+      const mockClient = { id: 'client-1' } as any;
+      expect(() => gateway.handleDisconnect(mockClient)).not.toThrow();
+    });
+  });
+
   describe('handleEvent (joinRoom)', () => {
     it('should join the client to the specified room and return confirmation', () => {
       const mockClient = { join: jest.fn() } as any;

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuctionsController } from './auctions.controller';
 import { AuctionsService } from 'src/auctions/services/auctions/auctions.service';
-import { Auction, AuctionToUser } from 'src/typeorm';
+import { Auction, AuctionToUser, Notification, ProxyBid } from 'src/typeorm';
 
 describe('AuctionsController', () => {
   let controller: AuctionsController;
@@ -22,6 +22,12 @@ describe('AuctionsController', () => {
             getBidsByAuctionId: jest.fn(),
             createAuction: jest.fn(),
             bidAuction: jest.fn(),
+            setProxyBid: jest.fn(),
+            cancelAuction: jest.fn(),
+            relistAuction: jest.fn(),
+            getAuctionAnalytics: jest.fn(),
+            getNotificationsForUser: jest.fn(),
+            markNotificationRead: jest.fn(),
           },
         },
       ],
@@ -146,6 +152,89 @@ describe('AuctionsController', () => {
 
       expect(auctionsService.bidAuction).toHaveBeenCalledWith(5, 10, 250);
       expect(result).toEqual(bids);
+    });
+  });
+
+  describe('setProxyBid', () => {
+    it('should set a proxy bid for the authenticated user', async () => {
+      const req = { user: { id: 3 } };
+      const dto = { auctionId: 1, maxAmount: 500 };
+      const proxyBid = { auctionId: 1, userId: 3, maxAmount: 500 } as ProxyBid;
+      auctionsService.setProxyBid.mockResolvedValue(proxyBid);
+
+      const result = await controller.setProxyBid(req, dto);
+
+      expect(auctionsService.setProxyBid).toHaveBeenCalledWith(1, 3, 500);
+      expect(result).toEqual(proxyBid);
+    });
+  });
+
+  describe('cancelAuction', () => {
+    it('should cancel the auction for the authenticated user', async () => {
+      const req = { user: { id: 5 } };
+      const cancelled = { id: 1, status: 'cancelled' } as Auction;
+      auctionsService.cancelAuction.mockResolvedValue(cancelled);
+
+      const result = await controller.cancelAuction(1, req);
+
+      expect(auctionsService.cancelAuction).toHaveBeenCalledWith(1, 5);
+      expect(result).toEqual(cancelled);
+    });
+  });
+
+  describe('relistAuction', () => {
+    it('should relist the auction with new end date', async () => {
+      const req = { user: { id: 5 } };
+      const dto = { endYear: '2027', endMonth: '6', endDay: '1', endHour: '10', endMinute: '0' };
+      const newAuction = { id: 2, status: 'pending' } as Auction;
+      auctionsService.relistAuction.mockResolvedValue(newAuction);
+
+      const result = await controller.relistAuction(1, req, dto);
+
+      expect(auctionsService.relistAuction).toHaveBeenCalledWith(
+        1, 5, '2027', '6', '1', '10', '0',
+        undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined,
+      );
+      expect(result).toEqual(newAuction);
+    });
+  });
+
+  describe('getAuctionAnalytics', () => {
+    it('should return analytics for an auction', async () => {
+      const analytics = { viewCount: 5, totalBids: 3, uniqueBidderCount: 2, highestBid: 500, lowestBid: 100, bidTimeline: [] };
+      auctionsService.getAuctionAnalytics.mockResolvedValue(analytics);
+
+      const result = await controller.getAuctionAnalytics(1);
+
+      expect(auctionsService.getAuctionAnalytics).toHaveBeenCalledWith(1);
+      expect(result).toEqual(analytics);
+    });
+  });
+
+  describe('getNotifications', () => {
+    it('should return notifications for the authenticated user', async () => {
+      const req = { user: { id: 7 } };
+      const notifications = [{ id: 1, userId: 7, message: 'outbid' }] as Notification[];
+      auctionsService.getNotificationsForUser.mockResolvedValue(notifications);
+
+      const result = await controller.getNotifications(req);
+
+      expect(auctionsService.getNotificationsForUser).toHaveBeenCalledWith(7);
+      expect(result).toEqual(notifications);
+    });
+  });
+
+  describe('markNotificationRead', () => {
+    it('should mark a notification as read', async () => {
+      const req = { user: { id: 7 } };
+      const notification = { id: 1, userId: 7, isRead: true } as any;
+      auctionsService.markNotificationRead.mockResolvedValue(notification);
+
+      const result = await controller.markNotificationRead(1, req);
+
+      expect(auctionsService.markNotificationRead).toHaveBeenCalledWith(1, 7);
+      expect(result).toEqual(notification);
     });
   });
 });
